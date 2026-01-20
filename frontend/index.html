@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Travel Planner</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #fdfbfb, #ebedee);
+    min-height: 100vh;
+    padding: 40px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 34px;
+    color: #ff7a18;
+}
+
+.header p {
+    margin-top: 6px;
+    color: #777;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+textarea, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #ff7a18, #ffb347);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.results {
+    margin-top: 35px;
+}
+
+.plan-card {
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 25px;
+    background: #fff8f0;
+    border: 2px dashed #ffd3a5;
+}
+
+.plan-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.plan-title h3 {
+    margin: 0;
+    color: #ff7a18;
+}
+
+.price {
+    font-weight: 700;
+    color: #333;
+}
+
+.info {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.day-box {
+    margin-top: 18px;
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.day-box h4 {
+    margin: 0 0 8px 0;
+    color: #ff7a18;
+}
+
+.footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    margin-top: 30px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🌍 Smart Travel Planner</h1>
+        <p>Plan happy journeys, day by day ✨</p>
+    </div>
+
+    <div class="form-group">
+        <label>✍️ Tell us your trip</label>
+        <textarea id="text" rows="3"
+        placeholder="Plan a 3 day trip for 4 people to Goa in 60000"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>👨‍👩‍👧 Traveller Type</label>
+        <select id="traveller_type">
+            <option value="young">Young</option>
+            <option value="children">Children</option>
+            <option value="senior">Senior</option>
+            <option value="mixed">Mixed</option>
+        </select>
+    </div>
+
+    <button onclick="generatePlan()">🚀 Plan My Trip</button>
+
+    <div class="results" id="output"></div>
+
+    <div class="footer-note">
+        Made with ❤️ for explorers
+    </div>
+</div>
+
+<script>
+async function generatePlan() {
+    const output = document.getElementById("output");
+    output.innerHTML = "⏳ Planning your journey...";
+
+    const res = await fetch("http://127.0.0.1:8000/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            text: document.getElementById("text").value,
+            traveller_type: document.getElementById("traveller_type").value
+        })
+    });
+
+    const data = await res.json();
+
+    if (!data.plans || data.plans.length === 0) {
+        output.innerHTML = "❌ No suitable plans found.";
+        return;
+    }
+
+    let html = "";
+    data.plans.forEach((plan, idx) => {
+        html += `
+        <div class="plan-card">
+            <div class="plan-title">
+                <h3>🌟 Plan ${idx + 1}</h3>
+                <div class="price">₹${plan["Total Cost"]}</div>
+            </div>
+
+            <div class="info">
+                🏨 <b>Hotel:</b> ${plan.Hotel}<br>
+                🚗 <b>Transport:</b> ${plan.Transport}
+            </div>
+        `;
+
+        plan.Activities.forEach((act, i) => {
+            html += `
+            <div class="day-box">
+                <h4>📅 Day ${i + 1}</h4>
+                <p>🎯 ${act}</p>
+            </div>`;
+        });
+
+        html += `<p><i>🧠 ${plan.Reason}</i></p></div>`;
+    });
+
+    output.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
